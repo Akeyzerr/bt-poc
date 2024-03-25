@@ -1,0 +1,18 @@
+.statusBox {
+    padding: 20px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+.available {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.notAvailable {
+    border-color: #f44336;
+    color: #f44336;
+}
