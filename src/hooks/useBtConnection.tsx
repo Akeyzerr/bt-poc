@@ -1,15 +1,18 @@
 import { useState } from "react";
 
-import StatusMessageProps from "../../shared/statusMsg";
+import { StatusMessageProps } from "../shared/statusMsg";
+import { BluetoothDevice } from "../shared/Bluetooth.def.types";
 
 const useBluetoothConnection = () => {
-  const [deviceInfo, setDeviceInfo] = useState<string | null>(null);
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [btDevice, setBtDevice] = useState<BluetoothDevice | null>(null);
+  const [isBtAvailable, setIsBtAvailable] = useState<boolean | null>(null);
   const [statusMessage, setStatusMessage] = useState<StatusMessageProps | null>(null);
+
+  const dismissStatusMessage = () => { setStatusMessage(null); };
 
   const checkBluetoothAvailability = () => {
     const available = 'bluetooth' in navigator && (navigator as any).bluetooth !== undefined;
-    setIsAvailable(available);
+    setIsBtAvailable(available);
 
     const okMsg: StatusMessageProps = {
       message: 'Bluetooth is available',
@@ -18,10 +21,9 @@ const useBluetoothConnection = () => {
       timeout: 3000,
     };
     const errMsg: StatusMessageProps = {
-      message: 'Bluetooth API is not available in this browser',
+      message: 'Bluetooth API is not available.\nPlease, use supported browser.',
       msgType: 'error',
       autoDismiss: false,
-      timeout: 3000,
     };
     setStatusMessage(available ? okMsg : errMsg);
   }
@@ -35,35 +37,63 @@ const useBluetoothConnection = () => {
   }
 
   const connectToDevice = async () => {
-    if (!isAvailable) return;
+    if (!isBtAvailable) return null;
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
         filters: anyDeviceFilter(),
         optionalServices: ['generic_access']
       });
       console.log('Device:', device);
-      device.addEventListener('gattserverdisconnected', onDeviceDisconnected)
+      setStatusMessage({
+        message: 'Device connected',
+        msgType: 'success',
+        autoDismiss: true,
+        timeout: 3000,
+      });
+      if (!device.gatt) {
+        setStatusMessage({
+          message: 'Error: GATT not available',
+          msgType: 'error',
+          autoDismiss: false,
+        });
+        
+        return null
+      };
 
       await device.gatt.connect();
+      setStatusMessage({
+        message: 'GATT connected',
+        msgType: 'success',
+        autoDismiss: true,
+        timeout: 1000,
+      });
+      device.addEventListener('gattserverdisconnected', onDeviceDisconnected)
+      setBtDevice(device);
 
-      setDeviceInfo(`Connected to ${device.name}:${device.id} !`);
+      return device;
     } catch (error) {
       console.error('Error:', error);
-      setDeviceInfo('Error: ' + error);
       setStatusMessage({
         message: 'Error: ' + error,
         msgType: 'error',
         autoDismiss: false,
       });
+
+      return null;
     }
   };
 
   const onDeviceDisconnected = () => {
-    setDeviceInfo(null);
-    setStatusMessage('Device disconnected');
+    setBtDevice(null);
+
+    setStatusMessage({
+      message: 'Device disconnected',
+      msgType: 'warning',
+      autoDismiss: false,
+    });
   };
 
-  return { deviceInfo, isAvailable, statusMessage, checkBluetoothAvailability, connectToDevice };
+  return { btDevice, isBtAvailable, statusMessage, checkBluetoothAvailability, connectToDevice, dismissStatusMessage };
 };
 
 export default useBluetoothConnection;

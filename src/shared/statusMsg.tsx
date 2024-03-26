@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './statusMsg.module.scss';
 
 export type StatusMessageProps = {
@@ -10,13 +10,21 @@ export type StatusMessageProps = {
 }
 
 class StatusMessage extends React.Component<StatusMessageProps> {
+  static defaultProps = {
+    autoDismiss: true,
+    timeout: 5000,
+    onDismiss: () => { },
+  };
   timerID: NodeJS.Timeout | null = null;
+  state = {
+    fadingOut: false,
+  };
 
   componentDidMount(): void {
-    if (this.props.autoDismiss) {
+    if (true === this.props.autoDismiss) {
       this.timerID = setTimeout(() => {
         this.dismissMessage();
-      }, this.props.timeout ?? 5000);
+      }, this.props.timeout ?? StatusMessage.defaultProps.timeout);
     }
   }
 
@@ -27,18 +35,21 @@ class StatusMessage extends React.Component<StatusMessageProps> {
   }
 
   dismissMessage = (): void => {
-    this.timerID = null;
-    if (this.props.onDismiss) {
-      this.props.onDismiss();
-    }
+    this.setState({ fadingOut: true });
+    setTimeout(() => {
+      if (this.props.onDismiss) {
+        this.props.onDismiss();
+      }
+    }, 500);
   };
 
   render() {
     const { message, msgType } = this.props;
+    const { fadingOut } = this.state;
+    const statusBoxClass = `${styles.statusBox} ${styles[msgType]} ${fadingOut ? styles.fadeOut : ''}`;
     return (
-      <div className={`${styles.statusBox} ${styles[msgType]}`}>
+      <div className={statusBoxClass} onClick={this.dismissMessage}>
         <span>{message}</span>
-        <button onClick={this.dismissMessage}>X</button>
       </div>
     )
   }

@@ -6,9 +6,13 @@ import './index.css'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration.ts';
 import reportWebVitals from './reportWebVitals.ts';
 
+import { BluetoothProvider } from './core/Bluetooth/BluetoothContext.tsx';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <BluetoothProvider>
+      <App />
+    </BluetoothProvider>
   </React.StrictMode>,
 )
 

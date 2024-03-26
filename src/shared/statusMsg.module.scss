@@ -1,27 +1,36 @@
 .statusBox {
     position: fixed;
     inset-inline-end: 1rem;
-    inset-block-start: 1rem;
+    inset-block-end: 1rem;
     z-index: 1000;
     padding-inline: 2rem;
     padding-block: 0.5rem;
     margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+    border: 0.125rem solid #ccc;
+    border-radius: 1rem;
     text-align: center;
-    animation: fadeInOut 5s forwards;
+    animation: fadeInOut 5s;
+    cursor: default;
 }
 
-.ok {
+.success {
     border-color: #4caf50;
     color: #4caf50;
 }
 
-.nok {
+.error {
     border-color: #f44336;
     color: #f44336;
-    animation: fadeIn 1s;
+}
+
+.warning {
+    border-color: #ff9800;
+    color: #ff9800;
+}
+
+.info {
+    border-color: #2196f3;
+    color: #2196f3;
 }
 
 @keyframes fadeIn {
@@ -34,16 +43,22 @@
 }
 
 @keyframes fadeInOut {
-    0% {
-        opacity: 0;
-    }
-    10% {
+    0%,
+    100% {
         opacity: 1;
     }
-    90% {
+}
+
+.fadeOut {
+    animation: fadeOut 1s;
+}
+
+@keyframes fadeOut {
+    0% {
         opacity: 1;
     }
     100% {
         opacity: 0;
     }
 }
+
