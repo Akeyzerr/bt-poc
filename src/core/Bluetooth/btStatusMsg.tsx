@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './BluetoothStatus.module.scss'
+import styles from './styles/BT-API-Status.module.scss';
 
 interface Props {
   isAvailable: boolean;
@@ -8,7 +8,7 @@ interface Props {
 const BluetoothStatus: React.FC<Props> = ({ isAvailable }) => {
   return (
     <div className={`${styles.statusBox} ${isAvailable ? styles.available : styles.notAvailable}`}>
-      {isAvailable ? "Bluetooth API is available" : "Bluetooth API is not available"}
+      {isAvailable ? "Bluetooth API is available" : "Bluetooth API is not available.\nPlease use a supported browser."}
     </div>
   );
 };

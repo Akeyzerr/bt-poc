@@ -1,0 +1,49 @@
+.statusBox {
+    position: fixed;
+    inset-inline-end: 1rem;
+    inset-block-start: 1rem;
+    z-index: 1000;
+    padding-inline: 2rem;
+    padding-block: 0.5rem;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    text-align: center;
+    animation: fadeInOut 5s forwards;
+}
+
+.ok {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.nok {
+    border-color: #f44336;
+    color: #f44336;
+    animation: fadeIn 1s;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
