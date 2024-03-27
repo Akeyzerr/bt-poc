@@ -1,9 +1,12 @@
 import React from 'react';
 import StatusMessage from '../shared/statusMsg';
 import { useBluetooth } from './Bluetooth/BluetoothContext';
+import { useUSB } from './USB/USBContext';
+
 
 const CheckAPIAvailability: React.FC = () => {
-  const { isBtAvailable, checkBluetoothAvailability, connectToDevice, statusMessage, dismissStatusMessage, btDevice, disconnectDevice } = useBluetooth();
+  const { isBtAvailable, checkBluetoothAvailability, connectToBtDevice, BtStatusMessage, dismissBtStatusMessage, btDevice, disconnectDevice } = useBluetooth();
+  const { isUSBAvailable, checkUSBAvailability, connectToUSBDevice, USBStatusMessage, dissmissUSBStatusMessage } = useUSB();
 
   const getButtonClass = () => {
     if (isBtAvailable === null) {
@@ -23,17 +26,28 @@ const CheckAPIAvailability: React.FC = () => {
 
   return (
     <div className='card'>
-      <button onClick={checkBluetoothAvailability} className={getButtonClass()}>
-        <span className="material-icons">{getIconName()}</span>
-        {isBtAvailable == null && <i style={{
-          fontFamily: 'Roboto',
-          paddingInlineStart: '0.5em',
-        }}>Check Bluetooth API availability</i>}
-      </button>
+      {isBtAvailable === null &&
+        <button onClick={checkBluetoothAvailability} className={getButtonClass()}>
+          <span className="material-icons">{getIconName()}</span>
+          {isBtAvailable == null && <i style={{
+            fontFamily: 'Roboto',
+            paddingInlineStart: '0.5em',
+          }}>Check Bluetooth API availability</i>}
+        </button>
+      }
+
+      {isUSBAvailable === null &&
+        <button onClick={checkUSBAvailability} className='icon'>
+          <span className='material-icons'>{isUSBAvailable ? 'check' : 'close'}</span>
+          {isUSBAvailable === null && <i style={{
+            fontFamily: 'Roboto',
+            paddingInlineStart: '0.5em',
+          }}>Check USB API availability</i>}
+        </button>}
 
       {isBtAvailable !== null &&
         <>
-          <button onClick={connectToDevice} className={`icon ${btDevice ? 'connected' : ''}`} >
+          <button onClick={connectToBtDevice} className={`icon ${btDevice ? 'connected' : ''}`} >
             <span className={`material-icons ${btDevice ? 'heartbeat' : ''}`}>bluetooth</span>
           </button>
           {btDevice &&
@@ -44,10 +58,24 @@ const CheckAPIAvailability: React.FC = () => {
         </>
       }
 
-      {statusMessage && <StatusMessage
-        {...statusMessage}
-        onDismiss={dismissStatusMessage}
+      {isUSBAvailable !== null &&
+        <>
+          <button onClick={connectToUSBDevice} className='icon' aria-label='connect'>
+            <span className='material-icons'>usb</span>
+          </button>
+        </>
+      }
+
+      {BtStatusMessage && <StatusMessage
+        {...BtStatusMessage}
+        onDismiss={dismissBtStatusMessage}
       />}
+
+      {USBStatusMessage && <StatusMessage
+        {...USBStatusMessage}
+        onDismiss={dissmissUSBStatusMessage}
+      />}
+
     </div>
   );
 };

@@ -2,9 +2,11 @@ import './App.css'
 import CheckAPIAvailability from '../core/checkAPIAvailability'
 import DeviceProperties from '../core/Bluetooth/deviceProperties'
 import { useBluetooth } from '../core/Bluetooth/BluetoothContext';
+import { useUSB } from '../core/USB/USBContext';
 
 function App() {
   const { btDevice, protobufMsg } = useBluetooth();
+  const { usbDevice } = useUSB();
 
   return (
     <>

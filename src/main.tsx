@@ -7,12 +7,15 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration.ts';
 import reportWebVitals from './reportWebVitals.ts';
 
 import { BluetoothProvider } from './core/Bluetooth/BluetoothContext.tsx';
+import { USBProvider } from './core/USB/USBContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BluetoothProvider>
-      <App />
-    </BluetoothProvider>
+    <USBProvider>
+      <BluetoothProvider>
+        <App />
+      </BluetoothProvider>
+    </USBProvider>
   </React.StrictMode>,
 )
 

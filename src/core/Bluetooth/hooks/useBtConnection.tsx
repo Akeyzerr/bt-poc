@@ -1,16 +1,15 @@
 import { useState } from "react";
 
 import { StatusMessageProps } from "../../../shared/statusMsg";
-import { BluetoothDevice } from "../Bluetooth.def.types";
 // import * as protobuf from '../../../shared/compiled'
 
 const useBluetoothConnection = () => {
   const [btDevice, setBtDevice] = useState<BluetoothDevice | null>(null);
   const [isBtAvailable, setIsBtAvailable] = useState<boolean | null>(null);
-  const [statusMessage, setStatusMessage] = useState<StatusMessageProps | null>(null);
+  const [BtStatusMessage, setStatusMessage] = useState<StatusMessageProps | null>(null);
   const [protobufMsg, setProtobufMsg] = useState<string>('');
 
-  const dismissStatusMessage = () => { setStatusMessage(null); };
+  const dismissBtStatusMessage = () => { setStatusMessage(null); };
 
   const checkBluetoothAvailability = () => {
     const available = 'bluetooth' in navigator && (navigator as any).bluetooth !== undefined;
@@ -39,11 +38,10 @@ const useBluetoothConnection = () => {
   //     .concat({ name: '' });
   // }
 
-  const connectToDevice = async () => {
+  const connectToBtDevice = async () => {
     if (!isBtAvailable) return null;
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
-        // filters: "ATCCM",
+      const device: BluetoothDevice = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
         // filters: anyDeviceFilter(),
         optionalServices: ['49535343-fe7d-4ae5-8fa9-9fafd205e455', '49535343-1e4d-4bd9-ba61-23c647249616']
@@ -126,7 +124,7 @@ const useBluetoothConnection = () => {
     });
   };
 
-  return { btDevice, isBtAvailable, statusMessage, checkBluetoothAvailability, connectToDevice, disconnectDevice, dismissStatusMessage, protobufMsg};
+  return { btDevice, isBtAvailable, BtStatusMessage, checkBluetoothAvailability, connectToBtDevice, disconnectDevice, dismissBtStatusMessage, protobufMsg};
 };
 
 export default useBluetoothConnection;
