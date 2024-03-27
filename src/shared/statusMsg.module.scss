@@ -14,23 +14,23 @@
 }
 
 .success {
-    border-color: #4caf50;
-    color: #4caf50;
+    border-color: var(--col-success);
+    color: var(--col-success);
 }
 
 .error {
-    border-color: #f44336;
-    color: #f44336;
+    border-color: var(--col-error);
+    color: var(--col-error);
 }
 
 .warning {
-    border-color: #ff9800;
-    color: #ff9800;
+    border-color: var(--col-warning);
+    color: var(--col-warning);
 }
 
 .info {
-    border-color: #2196f3;
-    color: #2196f3;
+    border-color: var(--col-info);
+    color: var(--col-info);
 }
 
 @keyframes fadeIn {

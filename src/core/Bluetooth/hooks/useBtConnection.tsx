@@ -1,17 +1,20 @@
 import { useState } from "react";
 
-import { StatusMessageProps } from "../shared/statusMsg";
-import { BluetoothDevice } from "../shared/Bluetooth.def.types";
+import { StatusMessageProps } from "../../../shared/statusMsg";
+import { BluetoothDevice } from "../Bluetooth.def.types";
+// import * as protobuf from '../../../shared/compiled'
 
 const useBluetoothConnection = () => {
   const [btDevice, setBtDevice] = useState<BluetoothDevice | null>(null);
   const [isBtAvailable, setIsBtAvailable] = useState<boolean | null>(null);
   const [statusMessage, setStatusMessage] = useState<StatusMessageProps | null>(null);
+  const [protobufMsg, setProtobufMsg] = useState<string>('');
 
   const dismissStatusMessage = () => { setStatusMessage(null); };
 
   const checkBluetoothAvailability = () => {
     const available = 'bluetooth' in navigator && (navigator as any).bluetooth !== undefined;
+
     setIsBtAvailable(available);
 
     const okMsg: StatusMessageProps = {
@@ -28,22 +31,23 @@ const useBluetoothConnection = () => {
     setStatusMessage(available ? okMsg : errMsg);
   }
 
-  const anyDeviceFilter = () => {
-    // Return a filter that accepts any device
-    // This is a workaround for the lack of support for the 'filters' option in Chrome
-    return Array.from('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-      .map(c => ({ namePrefix: c }))
-      .concat({ name: '' });
-  }
+  // const anyDeviceFilter = () => {
+  //   // Return a filter that accepts any device before ATCCM devices are the only ones that are supported
+  //   // This is a workaround for the lack of support for the 'filters' option in Chrome
+  //   return Array.from('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+  //     .map(c => ({ namePrefix: c }))
+  //     .concat({ name: '' });
+  // }
 
   const connectToDevice = async () => {
     if (!isBtAvailable) return null;
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
-        filters: anyDeviceFilter(),
-        optionalServices: ['generic_access']
+        // filters: "ATCCM",
+        acceptAllDevices: true,
+        // filters: anyDeviceFilter(),
+        optionalServices: ['49535343-fe7d-4ae5-8fa9-9fafd205e455', '49535343-1e4d-4bd9-ba61-23c647249616']
       });
-      console.log('Device:', device);
       setStatusMessage({
         message: 'Device connected',
         msgType: 'success',
@@ -56,11 +60,11 @@ const useBluetoothConnection = () => {
           msgType: 'error',
           autoDismiss: false,
         });
-        
+
         return null
       };
 
-      await device.gatt.connect();
+      const server = await device.gatt.connect();
       setStatusMessage({
         message: 'GATT connected',
         msgType: 'success',
@@ -69,6 +73,15 @@ const useBluetoothConnection = () => {
       });
       device.addEventListener('gattserverdisconnected', onDeviceDisconnected)
       setBtDevice(device);
+
+      const service = await server.getPrimaryService('49535343-fe7d-4ae5-8fa9-9fafd205e455');
+      const characteristic = await service.getCharacteristic('49535343-1e4d-4bd9-ba61-23c647249616');
+      await characteristic.startNotifications();
+      characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
+        const value = event.target.value;
+        const stringifiedMsg = new TextDecoder().decode(value);
+        setProtobufMsg(stringifiedMsg);
+      });
 
       return device;
     } catch (error) {
@@ -83,6 +96,26 @@ const useBluetoothConnection = () => {
     }
   };
 
+  const disconnectDevice = async () => {
+    if (!btDevice) return;
+    try {
+      await btDevice.gatt.disconnect();
+      setStatusMessage({
+        message: 'GATT successfully disconnected',
+        msgType: 'success',
+        autoDismiss: true,
+        timeout: 1000,
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      setStatusMessage({
+        message: 'Error: ' + error,
+        msgType: 'error',
+        autoDismiss: false,
+      });
+    }
+  }
+
   const onDeviceDisconnected = () => {
     setBtDevice(null);
 
@@ -93,7 +126,7 @@ const useBluetoothConnection = () => {
     });
   };
 
-  return { btDevice, isBtAvailable, statusMessage, checkBluetoothAvailability, connectToDevice, dismissStatusMessage };
+  return { btDevice, isBtAvailable, statusMessage, checkBluetoothAvailability, connectToDevice, disconnectDevice, dismissStatusMessage, protobufMsg};
 };
 
 export default useBluetoothConnection;

@@ -1,14 +1,16 @@
 import React, { createContext, useContext, Context } from "react";
-import useBluetoothConnection from "../../hooks/useBtConnection";
-import { BluetoothDevice } from "../../shared/Bluetooth.def.types";
+import useBluetoothConnection from "./hooks/useBtConnection";
+import { BluetoothDevice } from "./Bluetooth.def.types";
 import { StatusMessageProps } from "../../shared/statusMsg";
 
 interface BluetoothContextProps {
   btDevice: BluetoothDevice | null;
   isBtAvailable: boolean | null;
   statusMessage: StatusMessageProps | null;
+  protobufMsg: string;
   checkBluetoothAvailability: () => void;
   connectToDevice: () => Promise<void>;
+  disconnectDevice: () => void;
   dismissStatusMessage: () => void;
 }
 
@@ -26,8 +28,10 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     btDevice,
     isBtAvailable,
     statusMessage,
+    protobufMsg,
     checkBluetoothAvailability,
     connectToDevice,
+    disconnectDevice,
     dismissStatusMessage,
   } = useBluetoothConnection();
 
@@ -36,8 +40,10 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       btDevice,
       isBtAvailable,
       statusMessage,
+      protobufMsg,
       checkBluetoothAvailability,
       connectToDevice,
+      disconnectDevice,
       dismissStatusMessage,
     }}>
       {children}

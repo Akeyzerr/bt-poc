@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-import { BluetoothDevice } from '../../shared/Bluetooth.def.types';
+import { BluetoothDevice } from './Bluetooth.def.types';
+import styles from "./deviceProperties.module.scss";
 
 interface DeviceProps {
   device: BluetoothDevice | null;
@@ -8,10 +9,8 @@ interface DeviceProps {
 
 const DeviceProperties: React.FC<DeviceProps> = ({ device }) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
-  const temp = () => console.log('Device in the new comp:', device);
   useEffect(() => {
     if (device) {
-      console.log('Device in the new comp:', device);
       setIsVisible(true);
 
       const handleDisconnect = () => {
@@ -29,11 +28,10 @@ const DeviceProperties: React.FC<DeviceProps> = ({ device }) => {
   if (!isVisible || !device) return null;
 
   return (
-    <div>
-      <h2>Device Information</h2>
+    <div className={styles.deviceCard}>
+      <h3>Device Information</h3>
       <p><strong>Name:</strong> {device.name}</p>
       <p><strong>ID:</strong> {device.id}</p>
-      {/* Display more properties as needed */}
     </div>
   );
 };

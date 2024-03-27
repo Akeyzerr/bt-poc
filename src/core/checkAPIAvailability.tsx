@@ -3,7 +3,7 @@ import StatusMessage from '../shared/statusMsg';
 import { useBluetooth } from './Bluetooth/BluetoothContext';
 
 const CheckAPIAvailability: React.FC = () => {
-  const { isBtAvailable, checkBluetoothAvailability, connectToDevice, statusMessage, dismissStatusMessage } = useBluetooth();
+  const { isBtAvailable, checkBluetoothAvailability, connectToDevice, statusMessage, dismissStatusMessage, btDevice, disconnectDevice } = useBluetooth();
 
   const getButtonClass = () => {
     if (isBtAvailable === null) {
@@ -22,7 +22,7 @@ const CheckAPIAvailability: React.FC = () => {
   }
 
   return (
-    <>
+    <div className='card'>
       <button onClick={checkBluetoothAvailability} className={getButtonClass()}>
         <span className="material-icons">{getIconName()}</span>
         {isBtAvailable == null && <i style={{
@@ -32,16 +32,23 @@ const CheckAPIAvailability: React.FC = () => {
       </button>
 
       {isBtAvailable !== null &&
-        <button onClick={connectToDevice} className="icon">
-          <span className="material-icons">bluetooth</span>
-        </button>
+        <>
+          <button onClick={connectToDevice} className={`icon ${btDevice ? 'connected' : ''}`} >
+            <span className={`material-icons ${btDevice ? 'heartbeat' : ''}`}>bluetooth</span>
+          </button>
+          {btDevice &&
+            <button onClick={disconnectDevice} className='icon' aria-label='disconnect'>
+              <span className='material-icons'>close</span>
+            </button>
+          }
+        </>
       }
 
       {statusMessage && <StatusMessage
         {...statusMessage}
         onDismiss={dismissStatusMessage}
       />}
-    </>
+    </div>
   );
 };
 
