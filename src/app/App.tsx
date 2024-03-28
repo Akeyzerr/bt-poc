@@ -1,6 +1,6 @@
 import './App.css'
 import CheckAPIAvailability from '../core/checkAPIAvailability'
-import DeviceProperties from '../core/Bluetooth/deviceProperties'
+import BtDeviceProperties from '../core/Bluetooth/btDeviceProperties'
 import { useBluetooth } from '../core/Bluetooth/BluetoothContext';
 import { useUSB } from '../core/USB/USBContext';
 
@@ -18,7 +18,7 @@ function App() {
       </div>
       <div className="containerMain">
         {btDevice && <>
-          <DeviceProperties device={btDevice} />
+          <BtDeviceProperties device={btDevice} />
           <div className="card">
             <h2>Protobuf Message</h2>
             <div style={{ border: '1px solid black', padding: '10px', whiteSpace: 'pre-wrap', overflow: 'hidden' }}>
@@ -27,9 +27,12 @@ function App() {
           </div>
         </>
         }
+        {usbDevice && <>
+          <span>USB Device Connected</span>
+        </>}
       </div>
     </>
-  )
+  );
 }
 
 export default App

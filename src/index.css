@@ -153,8 +153,8 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
     :root {
         --col-main-color: #334;
-        --col-background: #eee;
-        --col-button-background: #445;
+        --col-background: hsla(200, 3%, 98%, 1);
+        --col-button-background: hsla(200, 15%, 85%, 0.85);
         --col-container-background: hsla(195, 6%, 73%, 0.2);
     }
     a:hover {

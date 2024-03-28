@@ -7,7 +7,7 @@ interface DeviceProps {
   device: BluetoothDevice | null;
 }
 
-const DeviceProperties: React.FC<DeviceProps> = ({ device }) => {
+const BtDeviceProperties: React.FC<DeviceProps> = ({ device }) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   useEffect(() => {
     if (device) {
