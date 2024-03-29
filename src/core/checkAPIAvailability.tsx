@@ -1,5 +1,5 @@
 import React from 'react';
-import StatusMessage from '../shared/statusMsg';
+// import StatusMessage from '../shared/statusMsg';
 import { useBluetooth } from './Bluetooth/BluetoothContext';
 import { useUSB } from './USB/USBContext';
 
@@ -36,15 +36,6 @@ const CheckAPIAvailability: React.FC = () => {
         </button>
       }
 
-      {isUSBAvailable === null &&
-        <button onClick={checkUSBAvailability} className='icon'>
-          <span className='material-icons'>{isUSBAvailable ? 'check' : 'close'}</span>
-          {isUSBAvailable === null && <i style={{
-            fontFamily: 'Roboto',
-            paddingInlineStart: '0.5em',
-          }}>Check USB API availability</i>}
-        </button>}
-
       {isBtAvailable !== null &&
         <>
           <button onClick={connectToBtDevice} className={`icon ${btDevice ? 'connected' : ''}`} >
@@ -58,6 +49,15 @@ const CheckAPIAvailability: React.FC = () => {
         </>
       }
 
+      {isUSBAvailable === null &&
+        <button onClick={checkUSBAvailability} className='icon'>
+          <span className='material-icons'>{isUSBAvailable ? 'check' : 'close'}</span>
+          {isUSBAvailable === null && <i style={{
+            fontFamily: 'Roboto',
+            paddingInlineStart: '0.5em',
+          }}>Check USB API availability</i>}
+        </button>}
+
       {isUSBAvailable !== null &&
         <>
           <button onClick={connectToUSBDevice} className='icon' aria-label='connect'>
@@ -66,7 +66,7 @@ const CheckAPIAvailability: React.FC = () => {
         </>
       }
 
-      {BtStatusMessage && <StatusMessage
+      {/* {BtStatusMessage && <StatusMessage
         {...BtStatusMessage}
         onDismiss={dismissBtStatusMessage}
       />}
@@ -74,7 +74,7 @@ const CheckAPIAvailability: React.FC = () => {
       {USBStatusMessage && <StatusMessage
         {...USBStatusMessage}
         onDismiss={dissmissUSBStatusMessage}
-      />}
+      />} */}
 
     </div>
   );

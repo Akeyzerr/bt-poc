@@ -1,56 +1,63 @@
-.statusBox {
+.msgContainer {
     position: fixed;
     inset-inline-end: 1rem;
     inset-block-end: 1rem;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.statusBox {
+    max-width: 300px;
+    overflow-wrap: break-word;
     padding-inline: 2rem;
     padding-block: 0.5rem;
-    margin: 10px 0;
+    margin-bottom: 0.5rem;
     border: 0.125rem solid #ccc;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     text-align: center;
-    animation: fadeInOut 5s;
+    animation: fadeIn var(--fade-in-duration, 500ms);
     cursor: default;
 }
 
 .success {
+    background-color: var(--col-success-bg);
     border-color: var(--col-success);
     color: var(--col-success);
 }
 
 .error {
+    background-color: var(--col-error-bg);
     border-color: var(--col-error);
     color: var(--col-error);
 }
 
 .warning {
+    background-color: var(--col-warning-bg);
     border-color: var(--col-warning);
     color: var(--col-warning);
 }
 
 .info {
+    background-color: var(--col-info-bg);
     border-color: var(--col-info);
     color: var(--col-info);
 }
 
+.statusBox.fadeOut {
+    animation: fadeOut var(--fade-out-duration, 500ms) forwards;
+}
+
 @keyframes fadeIn {
-    0% {
+    from {
         opacity: 0;
     }
-    100% {
+    to {
         opacity: 1;
     }
-}
-
-@keyframes fadeInOut {
-    0%,
-    100% {
-        opacity: 1;
-    }
-}
-
-.fadeOut {
-    animation: fadeOut 1s;
 }
 
 @keyframes fadeOut {
@@ -61,4 +68,3 @@
         opacity: 0;
     }
 }
-

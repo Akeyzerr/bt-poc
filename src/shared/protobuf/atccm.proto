@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.kostov.canthrust.protos";
+
+
+// These are all the "commands" that can be sent from the UI to the ATCCM and back
+// The ATCCM will send the STATUS command periodically on its own
+enum Command {
+  NOOP = 0x00;                        // Protobuf enums need to start at 0
+  STATUS = 0x01;                      // Typically sent periodically
+  BLINK = 0x02;                       // Blink command
+  TERMINATION = 0x03;                 // Termination
+  CHARGER_ON = 0x04;                  // Enable charger
+  VERSION = 0x05;                     // Reads SW and FW versions
+  THRUSTER_POSITION = 0x06;           // Changes the thruster position
+  READ_EVENT_LOG_SIZE = 0x07;         // Reads the event log size
+  READ_NEXT_EVENT_FROM_LOG = 0x08;    // Reads the next event on the event log
+  CLEAR_ERRORS = 0x09;                // Clears the error state of the joystick
+  RETRACTION_ENABLED = 0x0A;          // Enables or disables thruster retraction on power on/off
+  JET_MODE_ENABLED = 0x0B;            // Enables or disables jet mode
+  READ_CONFIGURATION = 0x0C;          // Reads the configuration (expects response with Configuration)
+  WRITE_CONFIGURATION = 0x0D;         // Writes the configuration
+}
+
+// from https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+enum SystemState {
+  STATE_UNSPECIFIED = 0;
+  STATE_INITIALIZING = 1;
+  STATE_OPERATIONAL = 2;
+  STATE_PRESLEEP = 3;
+  STATE_SLEEP = 4;
+  STATE_ERROR = 15;
+}
+
+enum EventSource {
+  SRC_UNSPECIFIED = 0;
+  // Single-joystick event sources
+  SRC_ATCCM = 1;          // Master/Current ATCCM
+  SRC_MOTOR = 2;          // Current Motor
+  SRC_CHARGER = 3;        // Current Charger
+
+  SRC_ATCCM_1 = 10;        // Auxiliary ATCCM 1
+  SRC_MOTOR_1 = 11;        // Auxiliary Motor 1
+  SRC_CHARGER_1 = 12;      // Auxiliary Charger 1
+  SRC_ATCCM_2 = 20;        // Auxiliary ATCCM 2
+  SRC_MOTOR_2 = 21;        // Auxiliary Motor 2
+  SRC_CHARGER_2 = 22;      // Auxiliary Charger 2
+  SRC_ATCCM_3 = 30;        // Auxiliary ATCCM 3
+  SRC_MOTOR_3 = 31;        // Auxiliary Motor 3
+  SRC_CHARGER_3 = 32;      // Auxiliary Charger 3
+}
+
+enum ChargeStatus {
+  STOP = 0;
+  RESET = 1;
+  SOFT_START = 2;
+  SEARCH_PHASE = 3;
+  BOOST = 4;
+  ABSORPTION = 5;
+  FLOATING = 6;
+  EGALISATION = 7;
+  DESULFATATION = 8;
+  CONTROL_UI = 9;
+  UNKNOWN = 0xFF;
+}
+
+enum UiMode {
+  DEFAULT = 0;
+  MOTOR = 1;                                      // If a CHARGER_Frame1, Byte 5, Charge status is different from 4 to 9
+  CHARGE_NO_THROTTLE = 2;                         // If a CHARGER_Frame1, Byte 5, Charge status is between 4 and 9 AND no throttle is applied for 2 s
+  CHARGE_THROTTLE = 3;                            // If a CHARGER_Frame1, Byte 5, Charge status is between 4 and 9 AND throttle is applied
+}
+
+message ChargerStatus {
+  ChargeStatus    status = 1;
+  bool            enabled = 2;
+  double          battery_voltage = 3;             // Resolution: 0.01V, Range 0..655.35 V
+  double          output_current = 4;              // Resolution: 0.01A, Range: 0..655.35 A
+  double          external_probe_temperature = 5;   // Resolution: 0.1C, Range: -3276,7…3276,7 °C (-3276,8°C = 0x8000 is probe 1 H not connected)
+  EventSource     id = 15;
+}
+
+message MotorStatus {
+  int32           rpm = 1;
+  bool            enabled = 2;
+  double          current = 3;
+  double          controller_temperature = 4;
+  double          motor_temperature = 5;
+  int32           throttle = 6;
+  uint32          error_code = 7;
+  double          battery_voltage = 8;
+  EventSource     id = 15;
+}
+
+message Versions {
+  string          software_version = 1;
+  string          bootloader_version = 2;
+}
+
+message TelemetryMsg {
+  SystemState             systemState = 1;
+  repeated MotorStatus    motors = 2;
+  repeated ChargerStatus  chargers = 3;
+}
+
+message ErrorMsg {
+  EventSource     source = 1;
+  uint32          code = 2;
+  string          text = 3;
+}
+
+message EventMsg {
+  Timestamp           timestamp = 1;
+  oneof event {
+    TelemetryMsg    telemetry = 2;
+    ErrorMsg        error = 3;
+  }
+}
+
+message EventQueueLeftResponse {
+  uint32 eventsLeftInTheQueue = 1;
+}
+
+message RemoteControlCommand {
+  int32           handle = 1;
+  bool            fwd_button = 2;
+  bool            bwd_button = 3;
+  bool            errors_disabled = 4;
+}
+
+message AtccmStatus {
+  UiMode          mode = 1;
+  bool            termination_enabled = 2;
+  bool            charger_enabled = 3;
+  bool            retraction_enabled = 9;
+  bool            jet_mode_enabled = 10;
+  uint32          thruster_position = 8;
+  MotorStatus     motor_status = 5;
+  ChargerStatus   charger_status = 6;
+  Versions        versions = 7;
+}
+
+message Values {
+  bool            termination_enabled = 1;
+  bool            charger_on = 2;
+  uint32          blinks = 3;
+  uint32          thruster_position = 4;
+  bool            retraction_enabled = 5;
+  bool            jet_mode_enabled = 6;
+}
+
+message Configuration {
+  bool            termination_enabled = 1;
+  bool            charger_enabled = 2;
+  uint32          thruster_position = 3;
+  bool            retraction_enabled = 4;
+  bool            jet_mode_enabled = 5;
+  bool            inactivityShutdownEnabled = 6;
+  uint32          inactivityShutdownTimeoutIsSeconds = 7;
+}
+
+// Main packet that is exchanged between the ATCCM and the UI. Goes both directions
+message AtccmPacket {
+  uint32                  protocol_version = 1;
+  Command                 command = 2;
+  bool                    write = 3;      // If true, the packet is sent from the UI to the ATCCM
+  AtccmStatus             status = 4;     // Only valid from ATCCM to UI
+  Values                  values = 5;     // Only valid from UI to ATCCM
+  Configuration           configuration = 6;
+}

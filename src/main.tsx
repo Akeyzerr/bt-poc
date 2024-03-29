@@ -8,14 +8,17 @@ import reportWebVitals from './reportWebVitals.ts';
 
 import { BluetoothProvider } from './core/Bluetooth/BluetoothContext.tsx';
 import { USBProvider } from './core/USB/USBContext.tsx';
+import { StatusMessageProvider } from './shared/statusMessagesContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <USBProvider>
-      <BluetoothProvider>
-        <App />
-      </BluetoothProvider>
-    </USBProvider>
+    <StatusMessageProvider>
+      <USBProvider>
+        <BluetoothProvider>
+          <App />
+        </BluetoothProvider>
+      </USBProvider>
+    </StatusMessageProvider>
   </React.StrictMode>,
 )
 

@@ -5,8 +5,9 @@ import { useBluetooth } from '../core/Bluetooth/BluetoothContext';
 import { useUSB } from '../core/USB/USBContext';
 
 function App() {
-  const { btDevice, protobufMsg } = useBluetooth();
+  const { btDevice, protobufMsg, sendBlinkCommand } = useBluetooth();
   const { usbDevice } = useUSB();
+
 
   return (
     <>
@@ -24,6 +25,7 @@ function App() {
             <div style={{ border: '1px solid black', padding: '10px', whiteSpace: 'pre-wrap', overflow: 'hidden' }}>
               {(protobufMsg && protobufMsg.length > 0) ? protobufMsg : 'No message received'}
             </div>
+            <button onClick={sendBlinkCommand}>Try me</button>
           </div>
         </>
         }

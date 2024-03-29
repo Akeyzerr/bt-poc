@@ -16,9 +16,13 @@
     --col-button-background: #1a1a1a;
     --col-container-background: hsla(0, 6%, 73%, 0.2);
     --col-success: hsla(122, 49%, 59%, 0.9);
+    --col-success-bg: hsla(122, 49%, 59%, 0.15);
     --col-error: hsla(4, 90%, 58%, 1);
+    --col-error-bg: hsla(8, 90%, 60%, 0.15);
     --col-warning: hsla(42, 100%, 50%, 1);
+    --col-warning-bg: hsla(42, 100%, 50%, 0.15);
     --col-info: hsla(207, 90%, 54%, 1);
+    --col-info-bg: hsla(207, 90%, 54%, 0.15);
 }
 
 html,

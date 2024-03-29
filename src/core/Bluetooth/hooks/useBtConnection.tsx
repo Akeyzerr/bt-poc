@@ -1,33 +1,46 @@
 import { useState } from "react";
+import { StatusMessageProps, useStatusMessage } from "../../../shared/statusMessagesContext";
+import * as protobuf from "../../../shared/protobuf/atccm-protobuf-ts"
 
-import { StatusMessageProps } from "../../../shared/statusMsg";
-// import * as protobuf from '../../../shared/compiled'
+
+function findAndExtractMinPayload(data: Uint8Array): Uint8Array | null {
+  const startMarker = [0xaa, 0xaa, 0xaa];
+  const endMarker = 0x55;
+  let startIndex = -1;
+
+  for (let i = 0; i <= data.length - startMarker.length; i++) {
+    if (data[i] === startMarker[0] && data[i + 1] === startMarker[1] && data[i + 2] === startMarker[2]) {
+      startIndex = i + startMarker.length;
+      break;
+    }
+  }
+
+  if (startIndex === -1) return null;
+
+  // Assuming no byte stuffing for simplicity. Real implementation needs to handle this.
+  const endIndex = data.indexOf(endMarker, startIndex);
+
+  if (endIndex === -1) return null;
+
+  const payload = data.slice(startIndex, endIndex);
+
+  return payload;
+}
+
 
 const useBluetoothConnection = () => {
   const [btDevice, setBtDevice] = useState<BluetoothDevice | null>(null);
   const [isBtAvailable, setIsBtAvailable] = useState<boolean | null>(null);
-  const [BtStatusMessage, setStatusMessage] = useState<StatusMessageProps | null>(null);
   const [protobufMsg, setProtobufMsg] = useState<string>('');
-
-  const dismissBtStatusMessage = () => { setStatusMessage(null); };
+  const { addMessage } = useStatusMessage();
 
   const checkBluetoothAvailability = () => {
     const available = 'bluetooth' in navigator && (navigator as any).bluetooth !== undefined;
 
     setIsBtAvailable(available);
 
-    const okMsg: StatusMessageProps = {
-      message: 'Bluetooth is available',
-      msgType: 'success',
-      autoDismiss: true,
-      timeout: 3000,
-    };
-    const errMsg: StatusMessageProps = {
-      message: 'Bluetooth API is not available.\nPlease, use supported browser.',
-      msgType: 'error',
-      autoDismiss: false,
-    };
-    setStatusMessage(available ? okMsg : errMsg);
+    const okMsg: StatusMessageProps = { message: 'Bluetooth is available', msgType: 'success', timeout: 2000, };
+    const errMsg: StatusMessageProps = { message: 'Bluetooth API is not available.\nPlease, use supported browser.', msgType: 'error', }; addMessage(available ? okMsg : errMsg);
   }
 
   // const anyDeviceFilter = () => {
@@ -46,27 +59,17 @@ const useBluetoothConnection = () => {
         // filters: anyDeviceFilter(),
         optionalServices: ['49535343-fe7d-4ae5-8fa9-9fafd205e455', '49535343-1e4d-4bd9-ba61-23c647249616']
       });
-      setStatusMessage({
-        message: 'Device connected',
-        msgType: 'success',
-        autoDismiss: true,
-        timeout: 3000,
-      });
+      addMessage({ message: 'Device connected', msgType: 'success', timeout: 3000, });
       if (!device.gatt) {
-        setStatusMessage({
-          message: 'Error: GATT not available',
-          msgType: 'error',
-          autoDismiss: false,
-        });
+        addMessage({ message: 'Error: GATT not available', msgType: 'error', autoDismiss: false, });
 
         return null
       };
 
       const server = await device.gatt.connect();
-      setStatusMessage({
+      addMessage({
         message: 'GATT connected',
         msgType: 'success',
-        autoDismiss: true,
         timeout: 1000,
       });
       device.addEventListener('gattserverdisconnected', onDeviceDisconnected)
@@ -77,18 +80,16 @@ const useBluetoothConnection = () => {
       await characteristic.startNotifications();
       characteristic.addEventListener('characteristicvaluechanged', (event: any) => {
         const value = event.target.value;
-        const stringifiedMsg = new TextDecoder().decode(value);
-        setProtobufMsg(stringifiedMsg);
+        const protobufMsg = findAndExtractMinPayload(value.buffer) || new Uint8Array();
+        const decodedMsg = protobuf.Values.fromBinary(protobufMsg);
+        console.log('Decoded message:', decodedMsg);
+        setProtobufMsg(JSON.stringify(decodedMsg));
       });
 
       return device;
     } catch (error) {
       console.error('Error:', error);
-      setStatusMessage({
-        message: 'Error: ' + error,
-        msgType: 'error',
-        autoDismiss: false,
-      });
+      addMessage({ message: 'Error: ' + error, msgType: 'error', });
 
       return null;
     }
@@ -97,34 +98,53 @@ const useBluetoothConnection = () => {
   const disconnectDevice = async () => {
     if (!btDevice) return;
     try {
-      await btDevice.gatt.disconnect();
-      setStatusMessage({
-        message: 'GATT successfully disconnected',
-        msgType: 'success',
-        autoDismiss: true,
-        timeout: 1000,
-      });
+      btDevice?.gatt?.disconnect();
+      addMessage({ message: 'GATT successfully disconnected', msgType: 'success', autoDismiss: true, timeout: 1000, });
     } catch (error) {
       console.error('Error:', error);
-      setStatusMessage({
-        message: 'Error: ' + error,
-        msgType: 'error',
-        autoDismiss: false,
-      });
+      addMessage({ message: 'Error: ' + error, msgType: 'error', autoDismiss: false, });
     }
+  }
+
+  const sendBlinkCommand = async () => {
+    if (!btDevice || !btDevice.gatt?.connected) return;
+
+    const cmd = protobuf.Command.BLINK;
+    const packet: protobuf.AtccmPacket = protobuf.AtccmPacket.create({
+      protocolVersion: 2,
+      command: cmd,
+      write: true,
+      values: {
+        terminationEnabled: true,
+        chargerOn: false,
+        blinks: 3,
+        thrusterPosition: 0,
+        retractionEnabled: false,
+        jetModeEnabled: false
+      } as protobuf.Values
+    });
+    const buffer = protobuf.AtccmPacket.toBinary(packet);
+    const minProtocolBuffer = new Uint8Array([0xaa, 0xaa, 0xaa, ...buffer, 0x55]);
+    console.log('Sending:', minProtocolBuffer);
+    try {
+      const service = await btDevice.gatt.getPrimaryService('49535343-fe7d-4ae5-8fa9-9fafd205e455');
+      const characteristic = await service.getCharacteristic('49535343-8841-43f4-a8d4-ecbe34729bb3');
+      await characteristic.writeValue(minProtocolBuffer.buffer);
+    } catch (error) {
+      console.error('Error:', error);
+      addMessage({ message: 'Error: ' + error, msgType: 'error', });
+    }
+
+    addMessage({ message: 'Blink command sent', msgType: 'info', autoDismiss: true, timeout: 3000, });
   }
 
   const onDeviceDisconnected = () => {
     setBtDevice(null);
 
-    setStatusMessage({
-      message: 'Device disconnected',
-      msgType: 'warning',
-      autoDismiss: false,
-    });
+    addMessage({ message: 'Device disconnected', msgType: 'warning', autoDismiss: false, });
   };
 
-  return { btDevice, isBtAvailable, BtStatusMessage, checkBluetoothAvailability, connectToBtDevice, disconnectDevice, dismissBtStatusMessage, protobufMsg};
+  return { btDevice, isBtAvailable, checkBluetoothAvailability, connectToBtDevice, disconnectDevice, protobufMsg, sendBlinkCommand };
 };
 
 export default useBluetoothConnection;

@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { WebUSBDevice, USBContextProps } from "../USBContext";
-import { StatusMessageProps } from "../../../shared/statusMsg";
+import { StatusMessageProps, useStatusMessage } from "../../../shared/statusMessagesContext";
 
-const filters = [{ vendorId: 0x04d8, productId: 0x000a }];
+const filters = [{ vendorId: 0x04d8 }];
 
 const useWebUSBConnection = () => {
   const [isUSBAvailable, setIsUSBAvailable] = useState<boolean | null>(null);
   const [usbDevice, setUsbDevice] = useState<WebUSBDevice | null>(null);
   const [isUSBConnected, setIsUSBConnected] = useState<boolean>(false);
   const [dataReceived, setDataReceived] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [USBStatusMessage, setUSBStatusMessage] = useState<StatusMessageProps | null>(null);
+
+  const { addMessage } = useStatusMessage();
 
   const checkUSBAvailability = () => {
     const available = "usb" in navigator && (navigator as any).usb !== undefined;
@@ -21,40 +21,25 @@ const useWebUSBConnection = () => {
       autoDismiss: true,
       timeout: 3000,
     };
-    const errMsg: StatusMessageProps = {
-      message: "USB API is not available.\nPlease, use supported browser.",
-      msgType: "error",
-      autoDismiss: false,
-    };
-    setUSBStatusMessage(available ? okMsg : errMsg);
+    const errMsg: StatusMessageProps = { message: "USB API is not available.\nPlease, use supported browser.", msgType: "error" };
+    addMessage(available ? okMsg : errMsg);
   };
 
-  const dissmissUSBStatusMessage = () => { setUSBStatusMessage(null); };
-
-  const connectToUSBDevice = async () => {
+  const connectToUSBDevice1 = async () => {
     if (!isUSBAvailable) return null;
     try {
       const device = await navigator.usb.requestDevice({ filters });
       await device.open();
-      setUSBStatusMessage({
-        message: "Device connected",
-        msgType: "success",
-        autoDismiss: true,
-        timeout: 3000,
-      });
-      if (device.configuration === null)
-        await device.selectConfiguration(1); // Select configuration #1 for the device.
-      await device.claimInterface(0); // Claim interface #0.
+      if (device.configuration === null) {
+        await device.selectConfiguration(1);
+      }
+      await device.claimInterface(0);
       setUsbDevice(device);
       setIsUSBConnected(true);
+      addMessage({ message: "Device connected", msgType: "success", autoDismiss: true, timeout: 3000, });
     } catch (err) {
       console.error("Error:", err);
-      setError(`Error connecting to device: ${err}`);
-      setUSBStatusMessage({
-        message: `Error connecting to device: ${err}`,
-        msgType: "error",
-        autoDismiss: false,
-      });
+      addMessage({ message: `Error connecting to device: ${err}`, msgType: "error" });
     }
   };
 
@@ -66,7 +51,7 @@ const useWebUSBConnection = () => {
       setIsUSBConnected(false);
     } catch (err) {
       console.error("Error:", err);
-      setError(`Error disconnecting device: ${err}`);
+      addMessage({ message: `Error disconnecting device: ${err}`, msgType: "error" });
     }
   };
 
@@ -93,19 +78,65 @@ const useWebUSBConnection = () => {
     }
   };
 
+  const connectToUSBDevice = async () => {
+    if (!(navigator as any).serial) return;
+
+    (navigator as any).serial.addEventListener("connect", (event: any) => {
+      console.log("Connected:", event);
+      addMessage({ message: "Device connected", msgType: "success", autoDismiss: true, timeout: 3000 });
+    });
+
+    (navigator as any).serial.addEventListener("disconnect", (event: any) => {
+      console.log("Disconnected:", event);
+      addMessage({ message: "Device disconnected", msgType: "warning", autoDismiss: true, timeout: 3000 });
+    });
+
+    (navigator as any).serial.getPorts().then((ports: any) => {
+      console.log("Ports:", ports);
+      addMessage({ message: `"Ports:" + ${ports}`, msgType: "info", autoDismiss: true, timeout: 3000 });
+    });
+
+    try {
+      const port = await (navigator as any).serial.requestPort();
+      await port.open({ baudRate: 250000 });
+      while (port.readable) {
+        const reader = port.readable.getReader();
+        addMessage({ message: "Reader created", msgType: "info", autoDismiss: true, timeout: 3000 });
+        while (true) {
+          const { value, done } = await reader.read();
+          console.log("Value:", value);
+          console.log("Done:", done);
+          if (done) {
+            reader.releaseLock();
+            addMessage({ message: "Reader released", msgType: "info", autoDismiss: true, timeout: 3000 });
+          }
+          if (value) {
+            const decoder = new TextDecoder();
+            const data = decoder.decode(value);
+            console.log("Data received:", data);
+            setDataReceived(data);
+          }
+          addMessage({ message: "Data received", msgType: "success", autoDismiss: true, timeout: 3000 });
+        }
+      }
+    } catch (err) {
+      console.error("Error connecting to serial device:", err);
+      addMessage({ message: `Error connecting to serial device: ${err}`, msgType: "error" });
+    } finally {
+      addMessage({ message: "Connection closed", msgType: "warning", autoDismiss: true, timeout: 3000 });
+    }
+  }
+
   return {
     usbDevice,
     isUSBAvailable,
     isUSBConnected,
     dataReceived,
-    error,
-    USBStatusMessage,
     checkUSBAvailability,
     connectToUSBDevice,
     disconnectDevice,
     sendDataToDevice,
     receiveDataFromDevice,
-    dissmissUSBStatusMessage,
   } as USBContextProps;
 
 };

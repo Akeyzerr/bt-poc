@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-import { BluetoothDevice } from './Bluetooth.def.types';
 import styles from "./deviceProperties.module.scss";
 
 interface DeviceProps {
@@ -36,4 +35,4 @@ const BtDeviceProperties: React.FC<DeviceProps> = ({ device }) => {
   );
 };
 
-export default DeviceProperties;
+export default BtDeviceProperties;

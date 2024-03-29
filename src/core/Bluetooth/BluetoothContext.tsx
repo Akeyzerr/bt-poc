@@ -1,19 +1,18 @@
 import React, { createContext, useContext, Context } from "react";
 import useBluetoothConnection from "./hooks/useBtConnection";
-import { StatusMessageProps } from "../../shared/statusMsg";
 
-interface BluetoothContextProps {
+export type BluetoothContextProps = {
   btDevice: BluetoothDevice | null;
   isBtAvailable: boolean | null;
-  BtStatusMessage: StatusMessageProps | null;
   protobufMsg: string;
   checkBluetoothAvailability: () => void;
   connectToBtDevice: () => Promise<void>;
   disconnectDevice: () => void;
-  dismissBtStatusMessage: () => void;
+  sendBlinkCommand: () => void;
 }
 
 const BluetoothContext: Context<BluetoothContextProps | null> = createContext<BluetoothContextProps | null>(null);
+
 export const useBluetooth = () => {
   const ctx = useContext(BluetoothContext);
   if (!ctx) {
@@ -26,24 +25,24 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const {
     btDevice,
     isBtAvailable,
-    BtStatusMessage,
     protobufMsg,
     checkBluetoothAvailability,
     connectToBtDevice,
     disconnectDevice,
-    dismissBtStatusMessage,
+    sendBlinkCommand,
   } = useBluetoothConnection();
 
   return (
     <BluetoothContext.Provider value={{
       btDevice,
       isBtAvailable,
-      BtStatusMessage,
       protobufMsg,
       checkBluetoothAvailability,
-      connectToBtDevice,
+      connectToBtDevice: async () => {
+        await connectToBtDevice();
+      },
       disconnectDevice,
-      dismissBtStatusMessage,
+      sendBlinkCommand,
     }}>
       {children}
     </BluetoothContext.Provider>
